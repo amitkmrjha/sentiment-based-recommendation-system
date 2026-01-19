@@ -1,84 +1,129 @@
+import os
 import pickle
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-import xgboost as xgb
 
-# Load necessary models and dataset
-def load_models_and_data():
-    with open('pickle_files/recommendation_model.pkl', 'rb') as f:
-        recommendation_model = pickle.load(f)
+BASE = os.path.dirname(__file__)
+ART = os.path.join(BASE, "artifacts")
 
-    with open('pickle_files/tfidf_vectorizer.pkl', 'rb') as f:
-        tfidf_vectorizer = pickle.load(f)
+def load_pickle(name):
+    path = os.path.join(ART, name)
+    return pickle.load(open(path, "rb"))
 
-    with open('pickle_files/xgboost_model.pkl', 'rb') as f:
-        sentiment_model = pickle.load(f)
+# Load all required data and models
+try:
+    user_item_matrix = load_pickle('user_item_matrix.pkl')
+    item_similarity_df = load_pickle('item_similarity_df.pkl')
+    rf_clf = load_pickle('rf_clf.pkl')
+    tfidf_vectorizer = load_pickle('tfidf_vectorizer.pkl')
+    df = load_pickle('df.pkl')
 
-    data = pd.read_csv('data\sample30.csv')
+    if any(v is None for v in [user_item_matrix, item_similarity_df, rf_clf, tfidf_vectorizer, df]):
+        raise ValueError("Required variables not found. Ensure pickles exist.")
 
-    return recommendation_model, tfidf_vectorizer, sentiment_model, data
+    print("Successfully loaded models and data.")
 
-# Function to check if a username exists in the dataset
-def check_username(username, data):
-    return username in data['reviews_username'].unique()
+except Exception as e:
+    print(f"Error loading data and models: {e}")
+    user_item_matrix = None
+    item_similarity_df = None
+    rf_clf = None
+    tfidf_vectorizer = None
+    df = None
 
+def item_based_recommendations(item_name, user_item_matrix, item_similarity_df, n_recommendations=5):
+    if item_name not in item_similarity_df.index:
+        return []
 
-# Function to get recommended products based on user reviews
-def get_top_20_recommendations(user_reviewed_products, data):
-    # Find similar users based on the products they have reviewed
-    similar_users = data[data['id'].isin(user_reviewed_products)]['reviews_username'].unique()
-    # Get top 20 products reviewed by similar users
-    recommended_products = data[data['reviews_username'].isin(similar_users)]['id'].value_counts().head(20).index.tolist()
-    return recommended_products
+    item_similarities = item_similarity_df.loc[item_name].drop(item_name, errors='ignore')
+    users_who_rated_item = user_item_matrix.index[user_item_matrix[item_name] > 0]
+    item_scores = {}
 
+    for similar_item, similarity_score in item_similarities.items():
+        if similarity_score <= 0:
+            continue
+        for user in users_who_rated_item:
+            if user_item_matrix.loc[user, similar_item] > 0:
+                if similar_item not in item_scores:
+                    item_scores[similar_item] = 0
+                item_scores[similar_item] += user_item_matrix.loc[user, similar_item] * similarity_score
 
-# Function to calculate sentiment score for a product
-def get_sentiment_score(product_reviews, tfidf_vectorizer, sentiment_model):
-    if product_reviews.empty:
-        return 0
+    recommended_items = sorted(item_scores.items(), key=lambda x: x[1], reverse=True)
+    return [item for item, score in recommended_items[:n_recommendations]]
 
-    # Transform reviews into TF-IDF features
-    tfidf_features = tfidf_vectorizer.transform(product_reviews)
+# def get_recommendations_for_user(username, n_recommendations=5):
+#     recommendations = []
+#     predicted_sentiments_list = []
 
-    # Predict sentiments using the sentiment model
-    sentiments = sentiment_model.predict(tfidf_features)
+#     if user_item_matrix is None or item_similarity_df is None:
+#         return [("Recommendation system not initialized.", "")]
 
-    # Calculate the positive sentiment percentage
-    positive_sentiments = sum(sentiments)
-    return positive_sentiments / len(sentiments)  # Return as percentage
+#     if username not in user_item_matrix.index:
+#         return [(f"User '{username}' not found.", "")]
 
+#     user_rated_items = user_item_matrix.loc[username][user_item_matrix.loc[username] > 0].index.tolist()
+#     if not user_rated_items:
+#         return [("No items rated by user.", "")]
 
-# Function to generate recommendations based on sentiment analysis
-def generate_recommendations(recommended_products, data, tfidf_vectorizer, sentiment_model):
-    top_5_products = []
+#     seed_item = user_rated_items[0]
+#     recommended_items = item_based_recommendations(seed_item, user_item_matrix, item_similarity_df, n_recommendations)
 
-    for product_id in recommended_products:
-        product_reviews = data[data['id'] == product_id]['reviews_text']
-        product_name = data[data['id'] == product_id]['name'].iloc[0]
+#     if rf_clf is not None and tfidf_vectorizer is not None and df is not None:
+#         for item_name in recommended_items:
+#             item_reviews = df[df['name'] == item_name]['reviews_text_preprocessed']
+#             if not item_reviews.empty:
+#                 tfidf_reviews = tfidf_vectorizer.transform(item_reviews)
+#                 preds = rf_clf.predict(tfidf_reviews)
+#                 positive_pct = (preds == 'Positive').sum() / len(preds) * 100
+#                 recommendations.append(item_name)
+#                 predicted_sentiments_list.append(f"{positive_pct:.2f}% Positive")
+#             else:
+#                 recommendations.append(item_name)
+#                 predicted_sentiments_list.append("N/A (No reviews)")
+#     else:
+#         predicted_sentiments_list = ["Sentiment N/A"] * len(recommended_items)
 
-        # Get sentiment score for the product
-        sentiment_score = get_sentiment_score(product_reviews, tfidf_vectorizer, sentiment_model)
+#     return list(zip(recommendations, predicted_sentiments_list))
 
-        # Add product name and sentiment score to the list
-        top_5_products.append((product_name, sentiment_score))
+def get_recommendations_for_user(username, n_recommendations=5):
+    recommendations = []
+    predicted_sentiments_list = []
 
-    # Sort products by sentiment score and return top 5
-    top_5_products = sorted(top_5_products, key=lambda x: x[1], reverse=True)[:5]
-    return [prod[0] for prod in top_5_products]  # Return only the product names
+    if user_item_matrix is None or item_similarity_df is None:
+        return [("Recommendation system not initialized.", "")]
 
+    if username not in user_item_matrix.index:
+        return [(f"User '{username}' not found.", "")]
 
-# Main function to get recommendations for a user
-def get_recommendations_for_user(username, data, tfidf_vectorizer, sentiment_model):
-    # Filter user-specific data
-    user_data = data[data['reviews_username'] == username]
+    user_rated_items = user_item_matrix.loc[username][user_item_matrix.loc[username] > 0].index.tolist()
+    if not user_rated_items:
+        return [("No items rated by user.", "")]
 
-    # Get all products reviewed by the user
-    user_reviewed_products = user_data['id'].unique()
+    seed_item = user_rated_items[0]
+    recommended_items = item_based_recommendations(seed_item, user_item_matrix, item_similarity_df, n_recommendations)
 
-    # Get top 20 recommended products based on similar user reviews
-    recommended_products = get_top_20_recommendations(user_reviewed_products, data)
+    if rf_clf is not None and tfidf_vectorizer is not None and df is not None:
+        for item_name in recommended_items:
+            item_reviews = df[df['name'] == item_name]['reviews_text_preprocessed']
+            if not item_reviews.empty:
+                tfidf_reviews = tfidf_vectorizer.transform(item_reviews)
+                preds = rf_clf.predict(tfidf_reviews)
+                positive_pct = (preds == 'Positive').sum() / len(preds) * 100
+                recommendations.append(item_name)
+                predicted_sentiments_list.append(positive_pct)
+            else:
+                recommendations.append(item_name)
+                predicted_sentiments_list.append(-1)  # use -1 for "no reviews"
+    else:
+        predicted_sentiments_list = [0] * len(recommended_items)
 
-    # Generate top 5 products based on sentiment analysis
-    top_5_products = generate_recommendations(recommended_products, data, tfidf_vectorizer, sentiment_model)
+    # Combine and sort by sentiment score (descending)
+    combined = list(zip(recommendations, predicted_sentiments_list))
+    combined_sorted = sorted(combined, key=lambda x: x[1], reverse=True)
 
-    return top_5_products
+    # Format percentage nicely before returning
+    final_output = [
+        (item, f"{score:.2f}% Positive" if score >= 0 else "N/A (No reviews)")
+        for item, score in combined_sorted
+    ]
+
+    return final_output

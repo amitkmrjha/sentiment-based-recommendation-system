@@ -1,7 +1,6 @@
-Flask
-gunicorn
+Flask>=2.0
 pandas
 numpy
 scikit-learn
-xgboost
-nltk
+gunicorn        # for production deployment
+joblib          # optional, for model serialization

@@ -1,171 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Recommendation</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css">
+    <title>Product Recommendations</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #343a40; /* Dark background for the entire page */
-            color: #f8f9fa; /* Light text color */
-            margin: 0;
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f7f7f7;
         }
-
-        .container {
-            margin-top: 60px;
+        h1 {
+            color: #333;
         }
-
-        .header {
-            text-align: center;
-            color: #f8f9fa;
-            font-size: 32px;
-            font-weight: bold;
+        form {
             margin-bottom: 30px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
-
-        .result-message {
-            font-size: 20px;
-            margin-bottom: 20px;
-            color: #d1d1d1; /* Lighter text for description */
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
         }
-
-        .card {
-            background-color: #495057; /* Slightly lighter dark background */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 40px;
-            margin-bottom: 50px;
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 20px;
+            border-radius: 6px;
             border: none;
-        }
-
-        .recommendation-table th,
-        .recommendation-table td {
-            padding: 15px;
-            text-align: center;
-            font-size: 18px;
-        }
-
-        .recommendation-table th {
-            background-color: #007bff;
+            background-color: #007BFF;
             color: white;
             font-weight: bold;
-        }
-
-        .recommendation-table td {
-            background-color: #6c757d; /* Dark gray for table cells */
-            color: #f8f9fa;
-        }
-
-        .recommendation-table tr:hover {
-            background-color: #495057; /* Darken on hover */
-        }
-
-        .recommendations-heading {
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #f8f9fa;
-            font-weight: 600;
-        }
-
-        .container input[type="text"] {
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #6c757d; /* Dark border for input */
-            width: 100%;
-            font-size: 18px;
-            margin-bottom: 20px;
-            box-sizing: border-box;
-            background-color: #495057; /* Darker background for input field */
-            color: #f8f9fa;
-        }
-
-        .container button {
-            background-color: #007bff;
-            border: none;
-            color: white;
-            padding: 15px 20px;
-            font-size: 18px;
-            border-radius: 8px;
-            width: 100%;
             cursor: pointer;
-            transition: background-color 0.3s ease;
         }
-
-        .container button:hover {
+        button:hover {
             background-color: #0056b3;
         }
-
-        .container .recommendations {
-            margin-top: 20px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
         }
-
-        .footer {
-            text-align: center;
-            font-size: 16px;
-            color: #888;
-            margin-top: 50px;
-            padding: 20px 0;
-            background-color: #212529; /* Dark background for footer */
-            color: #f8f9fa;
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
         }
-
-        .footer a {
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
+        th {
+            background-color: #007BFF;
+            color: white;
         }
     </style>
 </head>
 <body>
+    <h1>Product Recommendations</h1>
 
-<div class="container">
-    <div class="row">
-        <div class="col-lg-8 mx-auto">
-            <div class="card">
-                <h2 class="header">Ebuss Personalized Product Recommendations</h2>
-                <p class="result-message">
-                    Enter your username to get the top 5 product recommendations based on your past reviews and ratings.
-                </p>
+    <!-- Input Form -->
+    <form action="{{ url_for('index') }}" method="post">
+        <label for="username">Enter Username:</label>
+        <input type="text" id="username" name="username" placeholder="e.g., dorothy w, samantha, janicec" required>
+        <button type="submit">Get Recommendations</button>
+    </form>
 
-                <form action="/recommend" method="POST">
-                    <input type="text" name="username" placeholder="Enter your username" required />
-                    <button type="submit">Get Recommendations</button>
-                </form>
-
-                {% if recommendations %}
-                <div class="recommendations">
-                    <h3 class="recommendations-heading">
-                        Top 5 Product Recommendations for {{ username }}:
-                    </h3>
-                    <table class="table table-bordered recommendation-table">
-                        <thead>
-                            <tr>
-                                <th>Product Name</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for product in recommendations %}
-                            <tr>
-                                <td>{{ product }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="footer">
-    <p>Developed by <strong>Manjit</strong> for <strong>Ebuss</strong> - Your Trusted E-commerce Partner</p>
-</div>
-
+    <!-- Display Recommendations -->
+    {% if recommendations %}
+        <h2>Recommendations for {{ username }}</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Positive Sentiment</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item, sentiment in recommendations %}
+                    <tr>
+                        <td>{{ item }}</td>
+                        <td>{{ sentiment }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% elif username %}
+        <p>No recommendations available for '{{ username }}'.</p>
+    {% endif %}
 </body>
 </html>
