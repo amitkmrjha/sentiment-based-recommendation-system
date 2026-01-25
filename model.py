@@ -3,7 +3,7 @@ import pickle
 import pandas as pd
 
 BASE = os.path.dirname(__file__)
-ART = os.path.join(BASE, "artifacts")
+ART = os.path.join(BASE, "recommendation_app/pickles")
 
 def load_pickle(name):
     path = os.path.join(ART, name)
@@ -13,11 +13,10 @@ def load_pickle(name):
 try:
     user_item_matrix = load_pickle('user_item_matrix.pkl')
     item_similarity_df = load_pickle('item_similarity_df.pkl')
-    rf_clf = load_pickle('rf_clf.pkl')
-    tfidf_vectorizer = load_pickle('tfidf_vectorizer.pkl')
+    best_logreg = load_pickle('best_logreg.pkl')
     df = load_pickle('df.pkl')
 
-    if any(v is None for v in [user_item_matrix, item_similarity_df, rf_clf, tfidf_vectorizer, df]):
+    if any(v is None for v in [user_item_matrix, item_similarity_df, best_logreg, df]):
         raise ValueError("Required variables not found. Ensure pickles exist.")
 
     print("Successfully loaded models and data.")
@@ -26,8 +25,7 @@ except Exception as e:
     print(f"Error loading data and models: {e}")
     user_item_matrix = None
     item_similarity_df = None
-    rf_clf = None
-    tfidf_vectorizer = None
+    best_logreg = None
     df = None
 
 def item_based_recommendations(item_name, user_item_matrix, item_similarity_df, n_recommendations=5):
@@ -101,12 +99,11 @@ def get_recommendations_for_user(username, n_recommendations=5):
     seed_item = user_rated_items[0]
     recommended_items = item_based_recommendations(seed_item, user_item_matrix, item_similarity_df, n_recommendations)
 
-    if rf_clf is not None and tfidf_vectorizer is not None and df is not None:
+    if best_logreg is not None and df is not None:
         for item_name in recommended_items:
             item_reviews = df[df['name'] == item_name]['reviews_text_preprocessed']
             if not item_reviews.empty:
-                tfidf_reviews = tfidf_vectorizer.transform(item_reviews)
-                preds = rf_clf.predict(tfidf_reviews)
+                preds = best_logreg.predict(item_reviews)
                 positive_pct = (preds == 'Positive').sum() / len(preds) * 100
                 recommendations.append(item_name)
                 predicted_sentiments_list.append(positive_pct)
