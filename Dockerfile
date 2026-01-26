@@ -31,4 +31,4 @@ EXPOSE 8000
 
 
 # Use Gunicorn for Flask production
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "app:app", "--workers=3", "--timeout=120"]
+CMD ["gunicorn", "-b", "0.0.0.0:8000", "app:app", "--workers=1", "--timeout=120"]
