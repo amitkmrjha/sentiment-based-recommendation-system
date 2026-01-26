@@ -1877,9 +1877,15 @@ for name in save_pickles.keys():
 
 # **Github Link For Repo :-** https://github.com/amitkmrjha/sentiment-based-recommendation-system
 
-# **App Deployed on renderer Link :-**
+# **App Deployed on render Link :-**
 # 
-# https://product-recommendation-project-8a76b78d452d.herokuapp.com/
+# https://sentiment-based-recommendation-system-caig.onrender.com/
+
+# In[ ]:
+
+
+
+
 
 # In[ ]:
 
