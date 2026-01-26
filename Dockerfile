@@ -20,8 +20,10 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy project files (excluding .venv thanks to .dockerignore)
-COPY . .
+COPY app.py .
+COPY model.py .
 COPY recommendation_app/ ./recommendation_app
+COPY templates/ ./templates
 
 # Expose port
 EXPOSE 8000
