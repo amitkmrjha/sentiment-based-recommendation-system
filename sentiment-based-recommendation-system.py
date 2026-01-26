@@ -1875,11 +1875,13 @@ for name in save_pickles.keys():
     loaded[name] = load_model(name=name)
 
 
-# **Github Link For Repo :-** https://github.com/amitkmrjha/sentiment-based-recommendation-system
+# ## App online link 
 
 # **App Deployed on render Link :-**
 # 
 # https://sentiment-based-recommendation-system-caig.onrender.com/
+
+# **Github Link For Repo :-** https://github.com/amitkmrjha/sentiment-based-recommendation-system
 
 # In[ ]:
 
