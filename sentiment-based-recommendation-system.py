@@ -78,9 +78,9 @@
 # 
 # ---
 # 
-# ### 4. Deployment (Optional)
+# ### 4. Deployment 
 # 
-# - **Goal**: Deploy the system in a production environment.
+# - **Goal**: Deploy the system in a cloud environment.
 # - **Suggestions**:
 #   - Build a UI using **Flask** or **Streamlit**
 #   - Host on platforms like **Heroku**, **Render**, or **AWS EC2**
@@ -94,14 +94,14 @@
 # - Sentiment classification model with performance metrics
 # - Collaborative filtering-based recommendation system
 # - Integrated sentiment-aware recommendation pipeline
-# - (Optional) Web UI for demonstration
+# - Web UI for demonstration
 # 
 # ---
 # 
 # Let’s start by loading and exploring the dataset!
 # 
 
-# In[46]:
+# In[3]:
 
 
 import pandas as pd
@@ -150,7 +150,7 @@ stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
 
-# In[47]:
+# In[4]:
 
 
 import pickle
@@ -160,7 +160,7 @@ from typing import Dict
 pickles_dir = "recommendation_app/pickles"
 
 
-# In[48]:
+# In[5]:
 
 
 import pickle
@@ -179,7 +179,7 @@ def save_model(obj, name: str, dir_path: str = pickles_dir) -> None:
 
 
 
-# In[49]:
+# In[6]:
 
 
 def load_model(name: str, dir_path: str = pickles_dir):
@@ -195,19 +195,19 @@ def load_model(name: str, dir_path: str = pickles_dir):
 
 
 
-# In[50]:
+# In[7]:
 
 
 # Read the CSV file into a pandas DataFrame
 df = pd.read_csv('data/sample30.csv')
 
 
-# ## 1.1 Initial Data Checks & Cleaning (Validity & Consistency)
+# ## Initial Data Checks & Cleaning
 # - Quick diagnostics: missing value counts, duplicate rows, outlier detection  
 # - Cleaning tasks: fill/drop nulls, unify string patterns, harmonize formats  
 # - Why: Clean datasets enable robust downstream analysis and modeling
 
-# In[51]:
+# In[8]:
 
 
 # Basic Dataset Overview
@@ -253,43 +253,43 @@ def unique_value_summary(df):
 
 
 
-# In[52]:
+# In[9]:
 
 
 dataset_overview(df)
 
 
-# In[53]:
+# In[10]:
 
 
 display(unique_value_summary(df))
 
 
-# In[54]:
+# In[11]:
 
 
 display(missing_values_summary(df))
 
 
-# In[55]:
+# In[12]:
 
 
 print("Duplicates:", duplicate_summary(df))
 
 
-# In[56]:
+# In[13]:
 
 
 display(numerical_summary(df))
 
 
-# In[57]:
+# In[14]:
 
 
 display(unique_value_summary(df))
 
 
-# In[58]:
+# In[15]:
 
 
 # Numerical Distribution Plot
@@ -316,19 +316,19 @@ def plot_outliers(df):
         plt.show()
 
 
-# In[59]:
+# In[16]:
 
 
 plot_numerical_distribution(df)
 
 
-# In[60]:
+# In[17]:
 
 
 plot_outliers(df)
 
 
-# In[61]:
+# In[18]:
 
 
 # Checking Distribution of `reviews_rating` column
@@ -350,7 +350,7 @@ plt.show()
 
 # The majority of user ratings are skewed toward the higher end, with 5-star ratings being the most frequent. This indicates a potential class imbalance, which could affect model performance—especially since user_sentiment is expected to align closely with these ratings. 
 
-# In[62]:
+# In[19]:
 
 
 # Get top 5 brands for each sentiment
@@ -382,7 +382,7 @@ plt.show()
 # 
 # We will also drop columns that are not relevant for our analysis to simplify the dataset and improve performance. Finally, we will ensure all columns have the correct data types for subsequent analysis.
 
-# In[63]:
+# In[20]:
 
 
 def clean_reviews_date(df, col='reviews_date'):
@@ -424,7 +424,7 @@ def clean_reviews_date(df, col='reviews_date'):
     return df
 
 
-# In[64]:
+# In[21]:
 
 
 # Example of handling missing values (replace with appropriate strategy based on analysis)
@@ -468,7 +468,7 @@ print("\nCleaned and Pre-processed DataFrame head:")
 display(df.head())
 
 
-# In[65]:
+# In[22]:
 
 
 # reviews_date (54 missing, <0.2%)
@@ -480,7 +480,7 @@ df = df[df['reviews_date'].notna()]
 df = df[df['user_sentiment'].notna()]
 
 
-# In[66]:
+# In[23]:
 
 
 # Display the DataFrame info after dropping columns
@@ -492,7 +492,7 @@ print("Missing values per column after handling:")
 display(df.isnull().sum())
 
 
-# In[67]:
+# In[24]:
 
 
 # Download necessary NLTK data (if not already downloaded)
@@ -547,13 +547,13 @@ print("\nDataFrame head with preprocessed text:")
 display(df[['reviews_text', 'reviews_text_preprocessed', 'reviews_title', 'reviews_title_preprocessed']].head())
 
 
-# In[68]:
+# In[25]:
 
 
 #dataset_overview(df)
 
 
-# In[69]:
+# In[26]:
 
 
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
@@ -577,7 +577,7 @@ plt.title("Top 30 Frequent Words in Reviews", fontsize=14)
 plt.show()
 
 
-# In[70]:
+# In[27]:
 
 
 # Saving the individual models in a file
@@ -588,7 +588,7 @@ save_model(df, "df_preprocessed")
 
 # ## 1.2 Train-Test Split
 
-# In[71]:
+# In[28]:
 
 
 from sklearn.model_selection import train_test_split
@@ -611,11 +611,11 @@ print(f"y_test shape: {y_test.shape}")
 
 
 
-# ## 1.2 Model Building & Evaluation
+# ## Model Building & Evaluation
 
 # #### Evaluation util function
 
-# In[72]:
+# In[29]:
 
 
 def evaluate_train_test_performance(
@@ -776,7 +776,7 @@ def evaluate_train_test_performance(
     return {"train": m_train, "test": m_test}
 
 
-# In[73]:
+# In[30]:
 
 
 def evaluate_models(
@@ -1877,6 +1877,12 @@ for name in save_pickles.keys():
 
 # **Github Link For Repo :-** https://github.com/amitkmrjha/sentiment-based-recommendation-system
 
-# **App Deployed on Heroku Link :-**
+# **App Deployed on renderer Link :-**
 # 
 # https://product-recommendation-project-8a76b78d452d.herokuapp.com/
+
+# In[ ]:
+
+
+
+
