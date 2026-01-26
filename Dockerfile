@@ -20,10 +20,15 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy project files (excluding .venv thanks to .dockerignore)
-COPY . .
+# Copy project files
+COPY app.py .
+COPY model.py .
+COPY recommendation_app/ ./recommendation_app
+COPY templates/ ./templates
 
 # Expose port
 EXPOSE 8000
+
 
 # Use Gunicorn for Flask production
 CMD ["gunicorn", "-b", "0.0.0.0:8000", "app:app", "--workers=3", "--timeout=120"]
