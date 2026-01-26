@@ -21,6 +21,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy project files (excluding .venv thanks to .dockerignore)
 COPY . .
+COPY recommendation_app/ ./recommendation_app
 
 # Expose port
 EXPOSE 8000
